@@ -19,7 +19,7 @@ class SimCLRAugmentationTransform:
         # Following the default augmentations listed out in their paper's Data Augmentation Details
         # If you want to add in more transforms, remember to use transforms.RandomApply
         self.transform = transforms.Compose([
-            transforms.RandomResizedCrop(size=224, ),
+            transforms.RandomResizedCrop(size=224,),
             transforms.RandomHorizontalFlip(),
             transforms.RandomApply(
                 [transforms.ColorJitter(brightness=0.8, contrast=0.8, saturation=0.8, hue=0.25)],
