@@ -20,13 +20,13 @@ To begin using the tools in this repository:
    ```bash
    git clone https://github.com/UCL-SightLinks/SightLinks-Dev.git
    ```
-2. **Navigate to the Development Tools Directory**:
-   ```bash
-   cd SightLinks-Dev/DevelopmentTools
-   ```
-3. **Install Dependencies**: Ensure you have Python installed, then install the necessary packages:
+2. **Install Dependencies**: Ensure you have Python installed, then install the necessary packages:
    ```bash
    pip install -r requirements.txt
+   ```
+3. **Navigate to the Development Tools Directory**:
+   ```bash
+   cd SightLinks-Dev/DevelopmentTools
    ```
 4. **Run the Tools**: Follow the instructions provided in each file's documentation to generate data, annotate images, or train models. 
 
