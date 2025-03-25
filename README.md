@@ -1,6 +1,8 @@
 # SightLinks Development Repository
 
-Welcome to the SightLinks Development Repository! We hope you can use these tools to build accessible systems and make the world a more welcoming place. This repository contains various tools and resources designed to facilitate the development of the SightLinks project, focusing on data generation, annotation, model training, feature extraction and much more. These are the tools used to develop the SightLinks system, as well as some addiitional Beta features that can bring the project even further.
+Welcome to the SightLinks Development Repository! We hope you can use these tools to build accessible systems and make the world a more welcoming place. This repository contains various tools and resources designed to facilitate the development of the SightLinks project, focusing on data generation, annotation, model training, feature extraction and much more. These are the tools used to develop the SightLinks system, as well as some addiitional Beta features that can bring the project even further. 
+
+### Note: There is a significant overlap between SightLinks-Main and SightLinks-Dev, with many of the functions overlapping.
 
 ## Project Overview
 
