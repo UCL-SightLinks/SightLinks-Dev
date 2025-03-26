@@ -65,11 +65,11 @@ class NTXentLoss(nn.Module):
 # A SimCLR model - to use just override the getModel function to whatever model you want to use, 
 # and post-training remove the projection layer and add in your classifier head (overwrite model's fully connected layer)
 class SimCLR(nn.Module):
-    def __init__(self, encoderModel="MobileNet_V3", outDim=128):
+    def __init__(self, encoderModel="MobileNet_V3", outDim=128, projectionHeadInputSize=1000):
         super().__init__()
         self.encoder = self.getModel(encoderModel)
         self.projectionHead = nn.Sequential(
-            nn.Linear(1000, 256),
+            nn.Linear(projectionHeadInputSize, 256),
             nn.LeakyReLU(),
             nn.Linear(256, outDim)
         )
