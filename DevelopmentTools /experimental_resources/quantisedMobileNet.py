@@ -208,7 +208,7 @@ class MobileNetV2_5(nn.Module):
         x = self.feature_extraction(x)
         x = self.avg_pooling(x)
         x = torch.flatten(x, 1)
-        print("eyo")
+
         x = self.classifier(x)
 
         return x
@@ -242,14 +242,18 @@ class QuantizableMobileNetV2_5(MobileNetV2_5):
 
 def train_single_epoch(model, loss_fnc, optimiser, data_loader, device):
     model.train()
+    model.to(device)
+
     running_loss = 0
     running_time = 0.0
     for images, labels in data_loader:
         start_time = time.time()
         print(".", end=" ")
-        
-        images, labels = images.to(device), labels.to(device)
-        preds = model(images)
+
+        images = images.to(device)
+        labels = labels.to(device)
+        preds = torch.sigmoid(quantized_model(images))
+
         loss = loss_fnc(preds, labels)
         loss.backward()
         optimiser.step()
@@ -274,7 +278,7 @@ def adjust_quantisation_engine():
 
 def train_model(model, dataloader, loss_function, optimiser, epoch_number=25, const_save=False, save=True):
     for epoch in range(epoch_number):
-        print("IT IS EPOCH", epoch)
+        print("It is epoch: ", epoch)
         train_single_epoch(model, loss_function, optimiser, dataloader, torch.device('cpu'))
 
         # Gradually freezes the unrequired observer parameters for quantisation and batch normalisation after a few epochs
