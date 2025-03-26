@@ -44,7 +44,7 @@ class SqueezeExcitation(nn.Module):
     
     # Scale returns the feature attention map, how much attention should be payed to each input layer, in range [0, 1]
     # Inplace is used to save memory on operations - it might not be necessary in our case since we aren't using edge devices
-    def _scale(self, input: Tensor, inplace=bool) -> Tensor:
+    def _scale(self, input: Tensor, inplace=True) -> Tensor:
         # Squeeze
         scale = F.adaptive_avg_pool2d(input, 1)
         scale = self.squeeze(scale)
@@ -299,6 +299,8 @@ def train_model(model, dataloader, loss_function, optimiser, epoch_number=25, co
             print(f"the above was Epoch {epoch} of {epoch_number}")
     
     if save:
+        quantized_model = torch.ao.quantization.convert(model.eval(), inplace=False)
+        quantized_model.eval()
         torch.save(quantized_model.state_dict(), "full_quantStateDict.pth")
                    
     return model
@@ -343,7 +345,7 @@ if load:
 
 
 for images, labels in test_loader:
-    preds = torch.sigmoid(quantized_model(images))
+    preds = quantized_model(images)
     for i in range(len(preds)):
         print(preds)
         # plt.imshow(torch.permute(images[i], (1, 2, 0)).detach().numpy())
