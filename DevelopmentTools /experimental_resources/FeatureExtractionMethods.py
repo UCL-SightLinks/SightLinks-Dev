@@ -11,7 +11,6 @@
 import numpy as np
 from scipy.signal import convolve2d
 import skimage.feature as skf
-from cv2 import NMSBoxes
 
 from scipy.ndimage import maximum_filter
 from collections import deque
@@ -19,7 +18,9 @@ from collections import deque
 
 
 # Was required for keeping several of the methods optimised.
-def matrixConvolution(image, kernel, padding=True):
+def matrixConvolution(image, kernel):
+    if len(image.shape) < 3:
+        raise ValueError("Input image must have 3 dimensions (h, w, c)")
     convolvedImage = np.zeros_like(image)
 
     # Again, this assumes the channels are placed at the end of the image
@@ -78,7 +79,7 @@ class ImageProcessingFeatures:
     # My chosen kernel is a pretty standard one that takes into consideration the corners - the 8 adjacencies one
     # ​[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]
     def laplaceTransform(self, image):
-        laplaceKernel=[[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]]
+        laplaceKernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
         convolvedImage = None
 
         # RGB image
@@ -132,7 +133,7 @@ class ImageProcessingFeatures:
         h, w = weakEdges.shape
         directions = [(-1, -1), (-1, 0), (0, -1), (1, -1), (-1, 1), (0, 0), (0, 1), (1, 0), (1, 1)]
         finalEdges = (strongEdges.copy() > 0) # must include strong edges, it's guaranteed, and we want a binary output.
-        edgeQueue = deque(np.argwhere(strongEdges == 1)) 
+        edgeQueue = deque(map(tuple, np.argwhere(strongEdges == 1)))
         
         while edgeQueue:
             y, x = edgeQueue.popleft()  
@@ -152,8 +153,8 @@ class ImageProcessingFeatures:
     # https://en.wikipedia.org/wiki/Canny_edge_detector + a lot of chatGPT prompts
     def cannyEdgeDetection(self, image):
         # Ensures that the image is in greyscale so we don't have any issues.
-        if (np.shape(image) == 3):
-            image = ImageProcessingFeatures.grayscaleConversion(image, schema="average")
+        if (len(np.shape(image)) == 3):
+            image = self.grayscaleConversion(image, schema="average")
 
         # Takes a greyscale image and returns a set of strong and weak edges (see wikipedia page)
         blurred = convolve2d(image, self.gaussianKernel, mode='same', boundary='wrap')
@@ -162,14 +163,14 @@ class ImageProcessingFeatures:
         suppressed = np.where(gradientMagnitude==maxFiltered, gradientMagnitude, 0)
         thresholded, strong, weak = self.doubleFiltering(suppressed)
 
-        final_edges = self.followEdges(strong, weak)
+        final_edges = self.followEdges(weakEdges=weak, strongEdges=strong)
         # We expand the definition of strong edges to include weak edges that are adjacent to strong edges
 
         return final_edges
 
     
     # Convolve this with the image to produce a Gaussian Blur effect 
-    # In a real application you should precompute this, it's really unoptimised
+    # In a real application you should precompute this, it's really unoptimised to recalculate it each time
     def generateGaussianKernel(self, size, sigma):
         center = size // 2
         kernel = np.zeros((size, size))
@@ -196,7 +197,7 @@ class ImageProcessingFeatures:
         
         # Enhances bright feature edges (our focus in crosswalks), but this is a thing that might vary based on your focus. Can be disabled!
         if brightFeatureFocus:
-            diffOfGaussians = diffOfGaussians[diffOfGaussians > 0]
+            diffOfGaussians = np.maximum(diffOfGaussians, 0)
 
         return diffOfGaussians
 
@@ -218,7 +219,7 @@ class ComplexityFeatures:
             image = ImageProcessingFeatures.grayscaleConversion(image, schema="average")
 
         image = ImageProcessingFeatures.sobelConvolution(image) # Could also go for DoG or Laplace too - most edge detectors work
-        image = np.int_(255 * (image - np.min(image)) / (np.max(image) - np.min(image)))
+        image = np.uint8(255 * (image - np.min(image)) / (np.max(image) - np.min(image)))
         image = ImageProcessingFeatures.grayscaleBinaryThresholding(image, imageStructureThreshold) 
 
         N, M = image.shape
@@ -236,7 +237,7 @@ class ComplexityFeatures:
                         numBoxes += 1
                         
             if numBoxes > 0:
-                logSizes.append(np.log(1.0 / boxSizes)) 
+                logSizes.append(np.log(1.0 / boxSize)) 
                 logCounts.append(np.log(numBoxes))
         
         slope, _ = np.polyfit(logSizes, logCounts, 1)
@@ -244,7 +245,7 @@ class ComplexityFeatures:
 
         return slope
 
-    # Come back to
+    # Not implemented - left as a suggest for a future improvement in method.
     def waveletBasedFractalTransform(self, image):
         pass
 
@@ -263,25 +264,17 @@ class TextureFeatures:
     # You could do row by row, but this is my preferred method. Feel free to overwrite, it shouldn't make a difference as long as you're consistent
     def spiral_concatenation(self, vals, dims):
         summed = []
-        dirs = [(0, 1), (1, 0), (0, -1), (-1, 0)] 
-        cur_dir = 0  
-        cur_x, cur_y = 0, 0  
-        bounds = dims  
+        dims_x, dims_y = dims
+        cur_dir = 0
+        cur_x, cur_y = 0, 0
+        dirs = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 
-        while bounds > 0:
-            for i in range(bounds):
-                summed.append(str(vals[cur_y * dims + cur_x])) 
-                cur_y, cur_x = cur_y + dirs[cur_dir][0], cur_x + dirs[cur_dir][1]  
-            cur_dir = (cur_dir + 1) % 4 
-            
-            bounds -= 1
-
-            if bounds > 0:
-                for i in range(bounds):
-                    summed.append(str(vals[cur_y * dims + cur_x]))
-                    cur_y, cur_x = cur_y + dirs[cur_dir][0], cur_x + dirs[cur_dir][1]
-                cur_dir = (cur_dir + 1) % 4
-                bounds -= 1
+        while dims_x > 0 and dims_y > 0:
+            for _ in range(dims_x):
+                summed.append(str(vals[cur_y * dims_y + cur_x]))
+                cur_y, cur_x = cur_y + dirs[cur_dir][0], cur_x + dirs[cur_dir][1]
+            cur_dir = (cur_dir + 1) % 4
+            dims_x, dims_y = dims_x - 1, dims_y - 1
 
         return "".join(summed)
 
@@ -308,12 +301,12 @@ class TextureFeatures:
     # https://medium.com/@girishajmera/feature-extraction-of-images-using-glcm-gray-level-cooccurrence-matrix-e4bda8729498
     # Link above explains the function quite well and succinctly. This takes in both coloured (n, m, k) and grayscale arrays (n, m).
     # Captures the spatial relationships between neighbouring gray levels/ Intensities
-    def grayLevelCoOccurenceMatrix(self, image, pixelOffset=5, preserveMatrix=False):
-        if not (np.shape(image) == 2):
+    def grayLevelCoOccurrenceMatrix(self, image, pixelOffset=5, preserveMatrix=False):
+        if not (len(np.shape(image)) == 2):
             # P.S - this assumes that RGB and [n, m, k] formats are followed. Can throw errors otherwise.
             image = ImageProcessingFeatures.grayscaleConversion(image, schema="average")
 
-        transformedArray = np.int_(255 * (image - np.min(image)) / (np.max(image) - np.min(image)))
+        transformedArray = np.uint8(255 * (image - np.min(image)) / (np.max(image) - np.min(image)))
 
         distances = [pixelOffset]
         angles = [0, np.pi/4, np.pi/2, 3*np.pi/4]
