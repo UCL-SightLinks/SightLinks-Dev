@@ -1,0 +1,11 @@
+# Dataset paths with absolute paths
+path: /cs/student/projects1/2023/aidenli/yolo-obb/dataset  # root directory
+train: images/train  # train images
+val: images/val  # validation images
+
+# Classes
+names: 
+  0: zebra_crossing
+
+# Dataset information
+img_size: 1024  # image size for training
