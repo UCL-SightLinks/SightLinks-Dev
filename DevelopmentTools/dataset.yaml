@@ -1,5 +1,5 @@
 # Dataset paths with absolute paths
-path: /cs/student/projects1/2023/aidenli/yolo-obb/dataset  # root directory
+path: your/path/dataset  # root directory
 train: images/train  # train images
 val: images/val  # validation images
 
