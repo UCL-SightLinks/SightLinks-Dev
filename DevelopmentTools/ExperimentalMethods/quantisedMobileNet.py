@@ -15,20 +15,33 @@
 # This is an adapted version of MobileNet, somewhere between versions 2/3, as some features of 3 were not required. There are
 # also some additions for our particular use case from miscallaneous sources
 
+import time
+import random
+import matplotlib.pyplot as plt
+import sys
+import os 
+
 from torchvision import transforms
 import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
 from torch.utils.data import DataLoader, Subset
-import ClassUtils
-
 from torch.ao.quantization import QuantStub, DeQuantStub
 from torchvision.models.mobilenetv2 import _make_divisible
 
-import time
-import random
-import os
-import matplotlib.pyplot as plt
+"""
+This is required to access development tool functions while this file is separated in the ExperimentalMethods folder,
+If this file is moved to the stable development tool directory, please make sure to adjust or remove this statement.
+"""
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
+
+import ClassUtils
+
+
+
+
 
 # Squeeze: summarising global context by pooling feature maps into a single value
 # Excitation: Learning attention weights for each channel to prioritise the most relevant ones

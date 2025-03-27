@@ -55,7 +55,7 @@ class NTXentLoss(nn.Module):
         xcs[torch.eye(xcs.shape[0], dtype=torch.bool)] = -float('inf')
 
         # Math works out on these I think, because they're in contigious pairs as an input.
-        target = torch.arange(len(z_i) * 2)
+        target = torch.arange(len(z_i) * 2).to(device)
         target[0::2] += 1
         target[1::2] -= 1
 
@@ -100,7 +100,9 @@ class SimCLR(nn.Module):
 if __name__ == "__main__":
     batchSize = 128
     transform = SimCLRAugmentationTransform()
-    dataset = datasets.CIFAR10(root="./data", train=True, transform=transform, download=True)
+
+    # Just for demo purposes, you can load in the Crosswalk Data here just as easily using ClassUtil.py's CrosswalksDataset object
+    dataset = datasets.CIFAR10(root="./DemoData", train=True, transform=transform, download=True)
     dataloader = DataLoader(dataset, batch_size=batchSize, shuffle=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -116,8 +118,8 @@ if __name__ == "__main__":
         model.train()
 
         for (x_i, x_j), _ in dataloader:
-            print(".")
-            x_i, x_j = x_i.to(device), x_j.to(device)
+            x_i = x_i.to(device)
+            x_j = x_j.to(device)
 
             optimiser.zero_grad()
 

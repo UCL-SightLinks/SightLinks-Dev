@@ -6,12 +6,11 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Subset
 import random
-from torchvision import models, transforms
+from torchvision import models
 from torch.utils.data import DataLoader
 import time
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
