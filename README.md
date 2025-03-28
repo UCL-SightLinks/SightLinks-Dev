@@ -30,7 +30,48 @@ To begin using the tools in this repository:
    ```bash
    cd SightLinks-Dev/DevelopmentTools
    ```
-4. **Run the Tools**: Follow the instructions provided in each file's documentation to generate data, annotate images, or train models. 
+4. **Run the Tools**: Follow the instructions provided in each file's documentation to generate data, annotate images, or train models. Remember to include your dataset, and cross-reference with the documentation provided in SightLinks-Main! 
+
+## Types of tools:
+
+This directory contains three distinct types of development tools: one for training the MobileNetV3 classifier, one for training the YOLOV11-OBB image detection model, and one for use in the experimental phase of our system. The different components are explained below briefly so that our experimental process can be recreated, but the methodology and implementation are described in more detail within the report. 
+
+#### Automate Annotations.py
+Contains code required to automatically retrieve and annotate crosswalk data for classification training, now using MapBox API over the previously used Google Static Tiles which is more expensive. Image are retrieved based on datasets retrieved from OpenStreetMap, these datasets are not complete and very sparse but sufficient for training models as long as multiple regions are sampled.
+
+#### Evaluate Performance.py
+Contains a set of evaluatory metrics for the objective comparision of different classification models using unseen data testing. Currently specialised for MobileNet models, but simple to expand as a template class is provided to extend.
+
+#### Classify.py
+Contains the code for loading and executing model inference. Required in development for the evaluation of model performance after training.
+
+#### Load Utils.py
+Contains the code for loading well-structured datasets such as yaml, as well as code to generate new classification data by breaking down object bounding box annotations. This provides a much larger, high quality, dataset for training the classification model.
+
+#### MobileNetV3.py
+Contains the code required for training and testing the MobileNetV3 classification model. This was the method used to train the classification layer of our program.
+
+#### object detection augmentation
+Contains the code for applying a series of transforms and noise to the dataset in order to improve the resistance to occlusion and obstruction of our YOLO model without requiring explicit annotations.
+
+#### yolo train
+Contains the code for training the YOLOv11-OBB model, which is used as the rotated object detection model in our crosswalk detection layer.
+
+### DevelopmentTools/ExperimentalMethods:
+This folder holds a collection of functions that were not incorporated into our pipeline. The reasons for this include later improvements, performance gains that came with trade-offs we deemed unworthy, or incomplete functionality (e.g., quantisedMobileNetV3).
+
+#### VGG Custom and VGG TL
+Two different implementations of the VGG16 classifier architecture. Both were used during development but later replaced as we encountered better model architectures for our use.
+
+#### Self-Supervised Feature Extraction
+A self-supervised feature extraction model that we experimented with using due to the abundance of unlabelled data we had. Unfortunately, we did not apply this, as in the end it did not provide a significant enough accuracy improvement since we had already generated a large annotated dataset. It remains as part of the experimental methodology, but also because for retraining for new transport features it offers great potential.
+
+#### Quantised Mobile Net
+A Quantisation Aware Training implementation of the Mobile Net V3 architecture that we attempted, as a potential direction of improvement. We were unable to successfully implement it, and leave it as a structure for further development on as the project is developed further. 
+
+#### Feature Extraction Methods
+Different feature extraction methods we investigated as potentially being useful, although determined it was not suitable for our system in the end. They are included as references for the experiment process, as well as for use in developing other applications.
+
 
 ## Contributing
 

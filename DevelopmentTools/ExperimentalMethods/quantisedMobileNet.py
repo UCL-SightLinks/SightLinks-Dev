@@ -1,4 +1,4 @@
-# BETA VERSION - NEEDS FURTHER DEVELOPMENT
+# BETA VERSION - NEEDS FURTHER DEVELOPMENT. Does Not Work.
 
 
 # Read these to catch up on what is (trying to at least) being done here
