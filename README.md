@@ -58,19 +58,20 @@ Contains the code for applying a series of transforms and noise to the dataset i
 Contains the code for training the YOLOv11-OBB model, which is used as the rotated object detection model in our crosswalk detection layer.
 
 ### DevelopmentTools/ExperimentalMethods:
-This folder holds a collection of functions that were not incorporated into our pipeline. The reasons for this include later improvements, performance gains that came with trade-offs we deemed unworthy, or incomplete functionality (e.g., quantisedMobileNetV3).
+This folder holds a collection of functions that were not incorporated into our final pipeline for a variety of reasons, but that are relevant to the development process especially for retraining. These form the resources we used for our experiments during the research process - discussed in more detail in our report. 
 
 #### VGG Custom and VGG TL
 Two different implementations of the VGG16 classifier architecture. Both were used during development but later replaced as we encountered better model architectures for our use.
 
 #### Self-Supervised Feature Extraction
-A self-supervised feature extraction model that we experimented with using due to the abundance of unlabelled data we had. Unfortunately, we did not apply this, as in the end it did not provide a significant enough accuracy improvement since we had already generated a large annotated dataset. It remains as part of the experimental methodology, but also because for retraining for new transport features it offers great potential.
+A self-supervised feature extraction model that we experimented with using due to the abundance of unlabelled data we had. Unfortunately, we did not apply this in the final version, as in the end it did not provide a significant enough accuracy improvement since we had already generated a large annotated dataset, and we did not have enough computational resources to use more data than that. It remains as part of the experimental methodology, but also because for retraining for new transport features it offers great potential.
 
 #### Quantised Mobile Net
-A Quantisation Aware Training implementation of the Mobile Net V3 architecture that we attempted, as a potential direction of improvement. We were unable to successfully implement it, and leave it as a structure for further development on as the project is developed further. 
+A Quantisation Aware Training implementation of the Mobile Net V3 architecture that we attempted, as a potential direction of improvement. The version we implemented is working, however is not optimised and requires much more data with much more training due to the QAT procedure, which we were unable to do with our current resources. Improvements are welcome for future development!
+
 
 #### Feature Extraction Methods
-Different feature extraction methods we investigated as potentially being useful, although determined it was not suitable for our system in the end. They are included as references for the experiment process, as well as for use in developing other applications.
+Different feature extraction methods we investigated as potentially being useful, although determined it was not optimal for our system in the end. They are included as references for the experiment process, as well as for use in developing other applications which focus more on occluded data.
 
 
 ## Contributing
