@@ -30,7 +30,16 @@ To begin using the tools in this repository:
    ```bash
    cd SightLinks-Dev/DevelopmentTools
    ```
-4. **Run the Tools**: Follow the instructions provided in each file's documentation to generate data, annotate images, or train models. Remember to include your dataset, and cross-reference with the documentation provided in SightLinks-Main! 
+4. **Run the Tools**: Follow the instructions provided in each file's documentation to generate data, annotate images, or train models. Remember to include your dataset, and cross-reference with the documentation provided in SightLinks-Main!
+
+**Note**: In training the sightLinks models, we used the directory structure shown below for our dataset. Please adjust if you're using a different dataset.
+```
+zebra_annotations/
+   - zebra_images
+   - txt_annotations
+   - classification_data
+      - # Generated from the other two folders using LoadUtils
+```
 
 ## Types of tools:
 
