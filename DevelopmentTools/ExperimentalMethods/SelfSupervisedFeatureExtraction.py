@@ -145,5 +145,5 @@ if __name__ == "__main__":
         print(f"In epoch {epoch+1} of {epochs+1}, there was a loss of {avgLoss:.4f}")
 
     print("Completed Training!!!")
-    torch.save(model.state_dict(), "Feature Extractor")
+    torch.save(model.state_dict(), "FeatureExtractor.pth")
     
