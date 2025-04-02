@@ -1,4 +1,4 @@
-# BETA VERSION - NEEDS FURTHER DEVELOPMENT. Does Not Work.
+# BETA VERSION - NEEDS FURTHER DEVELOPMENT. Does not train accurately
 
 
 # Read these to catch up on what is (trying to at least) being done here
@@ -38,8 +38,6 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_dir)
 
 import ClassUtils
-
-
 
 
 
@@ -265,7 +263,7 @@ def train_single_epoch(model, loss_fnc, optimiser, data_loader, device):
 
         images = images.to(device)
         labels = labels.to(device)
-        preds = torch.sigmoid(quantized_model(images))
+        preds = torch.sigmoid(model(images))
 
         loss = loss_fnc(preds, labels)
         loss.backward()

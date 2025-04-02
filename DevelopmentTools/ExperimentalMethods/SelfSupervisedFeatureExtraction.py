@@ -8,9 +8,16 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.models as models
 import torchvision.datasets as datasets
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 import numpy as np
 import random
+import sys
+import os
+
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, parent_dir)
+
+import ClassUtils
 
 # Applies random data augmentation techniques to the image, following the "simCLR" methodology
 # https://arxiv.org/pdf/2002.05709 
@@ -94,23 +101,23 @@ class SimCLR(nn.Module):
         return featureVector
 
 
-# Since this is completely dependent on what dataset you use, this serves PURELY as a tutorial for how
-# to put your own code in
-
+# This is dataset dependent, and works with how we currently do things with our dataset. Adapt to your usage.
 if __name__ == "__main__":
     batchSize = 128
+    data_size = 5280
     transform = SimCLRAugmentationTransform()
 
-    # Just for demo purposes, you can load in the Crosswalk Data here just as easily using ClassUtil.py's CrosswalksDataset object
-    dataset = datasets.CIFAR10(root="./DemoData", train=True, transform=transform, download=True)
-    dataloader = DataLoader(dataset, batch_size=batchSize, shuffle=True)
+    dataset = ClassUtils.CrosswalkDataset("zebra_annotations/classification_data",transform=transform)
+    dataloader = DataLoader(
+    Subset(dataset, random.sample(list(range(0, int(len(dataset) * 0.95))), data_size)),
+      batch_size=batchSize, shuffle=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = SimCLR().to(device)
-    optimiser = torch.optim.Adam(model.parameters(), lr=2e-3)
+    optimiser = torch.optim.Adam(model.parameters(), lr=1e-2)
     lossFunction = NTXentLoss(temperature=0.5)
 
-    epochs = 2
+    epochs = 25
     lossTracker = []
     print(len(dataloader))
     for epoch in range(epochs):
@@ -118,6 +125,7 @@ if __name__ == "__main__":
         model.train()
 
         for (x_i, x_j), _ in dataloader:
+            # Discards labels (image it was unlabelled data...)
             x_i = x_i.to(device)
             x_j = x_j.to(device)
 
@@ -134,6 +142,8 @@ if __name__ == "__main__":
 
         avgLoss = eraLoss / len(dataloader)
         lossTracker.append(avgLoss)
-        print(f"In epoch {epoch+1} of {epoch+1}, there was a loss of {avgLoss:.4f}")
+        print(f"In epoch {epoch+1} of {epochs+1}, there was a loss of {avgLoss:.4f}")
 
     print("Completed Training!!!")
+    torch.save(model.state_dict(), "Feature Extractor")
+    

@@ -1,3 +1,5 @@
 # Ignore the DemoData CIFAR dataset due to size limitations
 DemoData/cifar-10-batches-py
 DemoData/cifar-10-python.tar.gz
+
+DevelopmentTools/__pycache__

@@ -27,7 +27,6 @@ warnings.filterwarnings(
     module=r'.*'
 )
 
-# In a later version, this could be moved to a configuration file.
 learning_rate = 4e-3
 epoch_num = 25
 
