@@ -92,10 +92,14 @@ class ImageProcessingFeatures:
 
         return convolvedImage
 
-    # Assumes Grayscale images
+    # Takes Grayscale images
     # https://en.wikipedia.org/wiki/Sobel_operator - naive implementation by me, can probably be massively improved
     # Basically takes the vertical and horizontal gradients using convolution with a sobel operator and combines them.
     def sobelConvolution(self, image):
+
+        if len(np.shape(image)) >= 3:
+            image = self.grayscaleConversion(image)
+
         # Gx
         verticalKernel = [[-1, 0, 1],
                             [-2, 0, 2],
@@ -126,11 +130,11 @@ class ImageProcessingFeatures:
         result[strong_edges] = strong
         result[weak_edges] = weak
         
-        return result, strong, weak
+        return result, strong_edges, weak_edges
     
     # Technical name: edge tracking by hysteresis. This is an 'optimised' dequeue approach (to the best of my ability)
     def followEdges(self, weakEdges, strongEdges):
-        h, w = weakEdges.shape
+        h, w = np.shape(weakEdges)
         directions = [(-1, -1), (-1, 0), (0, -1), (1, -1), (-1, 1), (0, 0), (0, 1), (1, 0), (1, 1)]
         finalEdges = (strongEdges.copy() > 0) # must include strong edges, it's guaranteed, and we want a binary output.
         edgeQueue = deque(map(tuple, np.argwhere(strongEdges == 1)))
@@ -188,6 +192,10 @@ class ImageProcessingFeatures:
         # This by default uses a 5x5 kernel with sigmaOne = 1 and sigmaTwo = 2. These are not finetuned values but follow the general
         # principle that sigma should not be greater than approx. 3*dims. Be careful to consider the relationship between the dimension
         # and sigma values (and between the two sigmas themselves) to preserve the gaussian property!
+
+        if len(np.shape(image)) >= 3:
+            image = self.grayscaleConversion(image)
+
         kernelOne, kernelTwo = self.generateGaussianKernel(size, sigmaOne), self.generateGaussianKernel(size, sigmaTwo)
 
         primaryImage = convolve2d(image, kernelOne, mode='same', boundary='wrap')
@@ -207,6 +215,7 @@ class ImageProcessingFeatures:
 # Intended to potentially detect the occlusion in an image, e.g. more treees --> more complexity hopefully.
 class ComplexityFeatures:
     def __init__(self):
+        self.imgProc = ImageProcessingFeatures()
         pass
 
     # Definition: Mathematical measure of how complex an image or pattern is
@@ -216,11 +225,11 @@ class ComplexityFeatures:
     def fractalDimension(self, image, minimumBoxSize=2, imageStructureThreshold=0.9):
 
         if len(image.shape) > 2:
-            image = ImageProcessingFeatures.grayscaleConversion(image, schema="average")
+            image = self.imgProc.grayscaleConversion(image, schema="average")
 
-        image = ImageProcessingFeatures.sobelConvolution(image) # Could also go for DoG or Laplace too - most edge detectors work
+        image = self.imgProc.sobelConvolution(image) # Could also go for DoG or Laplace too - most edge detectors work
         image = np.uint8(255 * (image - np.min(image)) / (np.max(image) - np.min(image)))
-        image = ImageProcessingFeatures.grayscaleBinaryThresholding(image, imageStructureThreshold) 
+        image = self.imgProc.grayscaleBinaryThresholding(image, imageStructureThreshold) 
 
         N, M = image.shape
 
@@ -255,6 +264,7 @@ class ComplexityFeatures:
 # Many of these should be applied in sliding window approaches or in regions, or to the whole image if you have a feature vector
 class TextureFeatures:
     def __init__(self):
+        self.imgProc = ImageProcessingFeatures()
         pass
 
     def lbpCompare(self, threshold, value):
@@ -283,6 +293,7 @@ class TextureFeatures:
     # It generates a signature for each local region that can be used to compare them quite easily in applications like texture analysis.
     # CAREFUL - THIS IS A STRING FEATURE, NOT A NUMERICAL ONE
     def localBinaryPattern(self, image, dims):
+        image = self.imgProc.grayscaleConversion(image)
         imgWidth, imgLength = len(image[0]), len(image)
         edge = dims // 2 
         lbpList = []
@@ -293,7 +304,7 @@ class TextureFeatures:
                 centralPixel = image[row][pixel]
                 binaryVals = [self.lbpCompare(centralPixel, val) for val in neighborhood.flatten()]
 
-                lbpSignature = self.spiral_concatenation(binaryVals, dims)
+                lbpSignature = self.spiral_concatenation(binaryVals, (dims, dims))
                 lbpList.append(lbpSignature)
 
         return lbpList
@@ -304,7 +315,7 @@ class TextureFeatures:
     def grayLevelCoOccurrenceMatrix(self, image, pixelOffset=5, preserveMatrix=False):
         if not (len(np.shape(image)) == 2):
             # P.S - this assumes that RGB and [n, m, k] formats are followed. Can throw errors otherwise.
-            image = ImageProcessingFeatures.grayscaleConversion(image, schema="average")
+            image = self.imgProc.grayscaleConversion(image, schema="average")
 
         transformedArray = np.uint8(255 * (image - np.min(image)) / (np.max(image) - np.min(image)))
 
@@ -312,7 +323,7 @@ class TextureFeatures:
         angles = [0, np.pi/4, np.pi/2, 3*np.pi/4]
 
         # A bit of a cop out, but this just does it all for us. The metrics you choose to extract from this depend.
-        glcm = skf.graycomatrix(image, distances=distances, angles=angles, levels=256, symmetric=True, normed=True)
+        glcm = skf.graycomatrix(transformedArray, distances=distances, angles=angles, levels=256, symmetric=True, normed=True)
 
         # This is a set of features that I personally thought might be useful for the crosswalks - but there are many other extractable features
         contrast = skf.graycoprops(glcm, 'contrast')
@@ -329,3 +340,25 @@ class TextureFeatures:
         return metrics
 
 
+if __name__ == "__main__":
+    from PIL import Image
+    import numpy as np
+
+    # Random Example
+    image = Image.open("zebra_annotations/zebra_images/9186868439.jpg")
+
+    image_array = np.array(image)
+
+
+    textFet = TextureFeatures()
+    compFet = ComplexityFeatures()
+    imgProc=  ImageProcessingFeatures()
+
+    print(imgProc.laplaceTransform(image_array))
+    print(imgProc.sobelConvolution(image_array))
+    print(imgProc.cannyEdgeDetection(image_array))
+    print(imgProc.differenceOfGaussians(image_array))
+
+    print(compFet.fractalDimension(image_array))
+    print(textFet.localBinaryPattern(image_array, 2))
+    print(textFet.grayLevelCoOccurrenceMatrix(image_array))
